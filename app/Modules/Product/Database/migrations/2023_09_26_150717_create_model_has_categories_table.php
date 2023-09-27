@@ -23,7 +23,7 @@ return new class extends Migration
                     ->on('categories')
                     ->onDelete('cascade');
 
-                $table->primary(['tag_id', 'model_id', 'model_type'],
+                $table->primary(['category_id', 'model_id', 'model_type'],
                     'model_has_categories_categories_model_type_primary');
             });
         }

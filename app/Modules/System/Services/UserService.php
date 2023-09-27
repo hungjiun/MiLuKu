@@ -133,7 +133,6 @@ class UserService
                             'name',
                             'note',
                             'status',
-                            'updated_by',
                             'created_at',
                             'updated_at'
                         )->get();

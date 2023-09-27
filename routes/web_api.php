@@ -5,6 +5,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\Web\IndexController;
 use App\Http\Controllers\API\Web\Admin\UserController;
 
+use App\Http\Controllers\API\Web\Product\ProductController;
+use App\Http\Controllers\API\Web\Product\CategoryController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -19,10 +22,27 @@ use App\Http\Controllers\API\Web\Admin\UserController;
 Route::group(
     [
         'as' => 'web_api.',
-    ], function() {
+    ], function () {
         Route::post('login', [IndexController::class, 'userLogin']);
 
         Route::get('get_users', [UserController::class, 'getUsers']);
+
+        Route::group(
+            [
+                'prefix' => 'product'
+            ], function () {
+                Route::get('search', [ProductController::class, 'getProducts']);
+
+                Route::group(
+                    [
+                        'prefix' => 'category'
+                    ], function () {
+                        Route::get('search', [CategoryController::class, 'getCategories']);
+
+                    }
+                );
+            }
+        );
 
     }
 );
