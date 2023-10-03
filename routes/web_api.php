@@ -3,8 +3,8 @@
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\API\Web\IndexController;
+use App\Http\Controllers\API\Web\File\UploadController;
 use App\Http\Controllers\API\Web\Admin\UserController;
-
 use App\Http\Controllers\API\Web\Product\ProductController;
 use App\Http\Controllers\API\Web\Product\CategoryController;
 
@@ -25,7 +25,18 @@ Route::group(
     ], function () {
         Route::post('login', [IndexController::class, 'userLogin']);
 
-        Route::get('get_users', [UserController::class, 'getUsers']);
+        Route::post('image', [UploadController::class, 'storeImage'])->name('storeImage');
+        Route::post('video', [UploadController::class, 'storeVideo'])->name('storeVideo');
+
+        Route::group(
+            [
+                'prefix' => 'admin'
+            ], function () {
+                Route::get('users', [UserController::class, 'getUsers']);
+            }
+        );
+
+        Route::get('users', [UserController::class, 'getUsers']);
 
         Route::group(
             [

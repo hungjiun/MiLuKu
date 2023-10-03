@@ -69,7 +69,7 @@
     <script type="module">
         import {Manager} from "{{asset('web_assets/js/page/admin/manager/manager.js')}}?v=1"
 
-        let url = '/web_api/get_users';
+        let url = '/web_api/admin/users';
 
         $(document).ready(function () {
 

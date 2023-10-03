@@ -2,6 +2,7 @@
 
 namespace App\Modules\File\Services;
 
+use App\Modules\File\Repositories\FileRepository;
 use App\Modules\File\Constants\FileConstant;
 use App\Exceptions\ECException;
 use Illuminate\Http\File as HttpFile;
@@ -13,6 +14,13 @@ use Illuminate\Support\Str;
 
 class FileStorageService
 {
+    protected $fileRepository;
+
+    public function __construct(FileRepository $fileRepository)
+    {
+        $this->fileRepository = $fileRepository;
+    }
+
     private function getImageDirPath(): string
     {
         return config('fileStorage.image_dir_path');
@@ -105,7 +113,7 @@ class FileStorageService
         );
         $fileStorage = Storage::disk($this->getFileStorageDiskNameForImage());
         do {
-            $fileName = $this->generateRandomFileName($config['prefix']) . "_${width}_${height}.$extension";
+            $fileName = $this->generateRandomFileName($config['prefix']) . "_{$width}_{$height}.$extension";
             $fullFilePath = $this->getImageDirPath() . '/' . $fileName;
         } while ($fileStorage->exists($fullFilePath));
         $fileStorage->put($fullFilePath, $base64Decoded);
@@ -133,16 +141,15 @@ class FileStorageService
     {
         $config = array_merge(FileConstant::DEFAULT_CONFIG, $config);
         $fileStorage = Storage::disk($this->getFileStorageDiskNameForImage());
-        $prefix = $config['prefix'];
-        $path = "{$this->getImageDirPath()}/$prefix";
+        $path = "{$this->getImageDirPath()}/";
         [$width, $height] = getimagesize($file);
         if (!$fileStorage->exists($path)) {
             $fileStorage->makeDirectory($path, $mode = 0777, true, true);
             $fileStorage->setVisibility($path, 'public');
         }
         do {
-            $fileName = "$prefix/{$this->generateRandomFileName($config['prefix'])}_{$width}_{$height}.{$file->guessExtension()}";
-            $fullFilePath = "{$this->getImageDirPath()}$fileName";
+            $fileName = "{$this->generateRandomFileName()}_{$width}_{$height}.{$file->guessExtension()}";
+            $fullFilePath = "{$this->getImageDirPath()}/$fileName";
         } while ($fileStorage->exists($fullFilePath));
         $originalName = $file->getClientOriginalName();
         if (!Str::endsWith($originalName, ".{$file->guessExtension()}")) {
@@ -151,42 +158,25 @@ class FileStorageService
         $fileStorage->put($fullFilePath, fopen($file->getRealPath(), 'r'), 'public');
         $imagePath = Storage::url($fullFilePath);
         $url = asset($imagePath);
+
+        $fileData = [
+            'type' => $file->getMimeType(),
+            'server' => rtrim(env('APP_URL', '')) . '/',
+            'path' => $path,
+            'name' => $fileName,
+            'original_name' => $originalName,
+            'size' => $fileStorage->size($fullFilePath),
+        ];
+        $fileModel = $this->fileRepository->createFile($fileData);
+        throw_unless(
+            $fileModel,
+            new ECException('File Upload Fail')   
+        );
+
         return [
             'image_name' => $originalName,
             'image_path' => $url,
         ];
-    }
-
-    /**
-     *
-     * @param string $fileUrl
-     * @param array $config
-     *
-     * @return array
-     */
-    public function storeImageFromUrl($fileUrl, $config = [])
-    {
-        $config = array_merge(FileConstant::DEFAULT_CONFIG, $config);
-        $fileStorage = Storage::disk($this->getFileStorageDiskNameForImage());
-        $pathInfo = pathinfo($fileUrl);
-        $fileUrl = $pathInfo['dirname'] . '/' . rawurlencode($pathInfo['basename']);
-        $content = file_get_contents($fileUrl);
-        [$width, $height] = getimagesize($fileUrl);
-        if ($content) {
-            do {
-                $fileName = "{$this->generateRandomFileName($config['prefix'])}_${width}_${height}.{$pathInfo['extension']}";
-                $fullFilePath = "{$this->getImageDirPath()}/$fileName";
-            } while ($fileStorage->exists($fullFilePath));
-
-            $fileStorage->put($fullFilePath, $content);
-
-            return [
-                'fileName' => $fileName,
-                'path' => $fullFilePath,
-            ];
-        } else {
-            return [];
-        }
     }
 
     public function storeVideo($file, $config = [])

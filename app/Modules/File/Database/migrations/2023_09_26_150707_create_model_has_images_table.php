@@ -20,11 +20,11 @@ return new class extends Migration
 
                 $table->foreign('image_id')
                     ->references('id') // sys_files id
-                    ->on('sys_files')
+                    ->on('files')
                     ->onDelete('cascade');
 
                 $table->primary(['image_id', 'model_id', 'model_type'],
-                    'model_has_images_sys_files_model_type_primary');
+                    'model_has_images_files_model_type_primary');
             });
         }
     }

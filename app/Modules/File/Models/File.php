@@ -18,7 +18,6 @@ class File extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'uuid',
         'member_id',
         'type',
         'server',

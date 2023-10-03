@@ -14,7 +14,6 @@ return new class extends Migration
         if ( !Schema::hasTable('files')) {
             Schema::create('files', function (Blueprint $table) {
                 $table->id();
-                $table->uuid('uuid')->unique();
                 $table->bigInteger('member_id')->default(0);
                 $table->string('type')->nullable();
                 $table->string('server')->nullable();
